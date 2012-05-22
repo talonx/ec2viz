@@ -1,0 +1,124 @@
+<html>
+<head>
+    <script type="text/javascript" src="js/raphael-min.js"></script>
+    <script type="text/javascript" src="js/dracula_graffle.js"></script>
+    <script type="text/javascript" src="js/dracula_graph.js"></script>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript">
+
+    var ec2data = {};
+    $(document).ready(function() {
+        $('#chooser_drop').change(function() {
+            val = $('#chooser_drop option:selected').val();
+            redraw(ec2data, val);
+        });
+    });
+
+    function renderchild(r, node) {
+        var color = Raphael.getColor();
+        var ellipse = r.ellipse(0, 0, 40, 30).attr({fill: color, stroke: color, "stroke-width": 1});
+        /* set DOM node ID */
+        ellipse.node.id = node.label || node.id;
+        var set = r.set().
+        push(ellipse).
+        push(r.text(0, 0, node.label || node.id));
+        var p = node.props;
+        
+        set.items.forEach(function(el) {
+            el.tooltip(r.set().
+                push(r.rect(0, 0, 400, 270).attr({"fill": "#fec", "stroke-width": 1, r:"9px"})).
+                push(r.text(200, 120, JSON.stringify(p, undefined, 2)).
+                    attr({"font-size":"12px"})));
+        });
+        return set;
+    }
+
+    function renderhub(r, n) {
+        var set = r.set().push(
+            r.rect(n.point[0]-30, n.point[1]-13, 100, 60)
+                .attr({"fill": "#fa8", "stroke-width": 1, r : "20px"}))
+                .push(r.text(n.point[0] + 18, n.point[1] + 16, n.label)
+                    .attr({"font-size":"14px"}));
+        return set;
+    }
+
+    function sort(data, innerkey) {
+      newjson = {};
+      jQuery.each(data, function(k, innerlist) {
+    	  var i;
+    	  for (i = 0;i < innerlist.length; i++) {
+    	      innerjson = innerlist[i];
+    	      innervalue = innerjson[innerkey];
+    	      var newarray = newjson[innervalue];
+    	      if(newarray == undefined) {
+        		  newarray = new Array(0);
+    	    	  newjson[innervalue] = newarray;
+    	      }
+    	      newarray.push(innerjson);
+    	  }
+      });
+      return newjson;
+    }
+
+    function graphize() {
+        $.ajax({
+            type: 'GET',
+            url: '../instancedata',
+            async: true,
+            dataType: 'json',
+            success: drawgraph,
+            failure: function(data) {
+                alert("failed to fetch data about instances: " + data);//Does data have anything displayable? in this form?
+            }
+        });
+    }
+
+    function drawgraph(data) {
+        ec2data = data;
+    	var count = 0;
+        var g = new Graph();
+
+    	jQuery.each(data, function(i, val) {
+    	    g.addNode(i, {label: i, render: renderhub});//Hub
+    	    jQuery.each(val, function(j, instance) {
+                var nodename = instance['Name'];
+                if (nodename == 'Unknown') {
+                    nodename += count++;
+                }
+                g.addNode(nodename, {label: nodename, render: renderchild, props: instance});
+                g.addEdge(i, nodename);
+    	    });
+    	});
+
+      	var layouter = new Graph.Layout.Spring(g);
+      	var renderer = new Graph.Renderer.Raphael('canvas', g, 1800, 800);
+
+    	layouter.layout();
+	    renderer.draw();
+
+    }
+    redraw = function(data, sortkey) {
+        var d = sort(data, sortkey);
+        $('#canvas').html('');
+        drawgraph(d);
+    }
+    </script>
+
+</head>
+<body onload="graphize();">
+
+<div id='chooser'>
+Group by
+<select id='chooser_drop'>
+<option value="placement">Zone</option>
+<option value="instance_type">Instance Size</option>
+<option value="groups">Group</option>
+<option value="groups">My Topology</option>
+</select>
+</div>
+
+<div id='canvas'>
+</div>
+
+</body>
+</html>

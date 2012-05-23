@@ -3,17 +3,16 @@ from collections import defaultdict
 import json
 import sys
 import ConfigParser
+import os
 
 class ec2data:
 
     def __init__(self):
         self.key, self.secret = self.read_creds()
-        print "[",self.key,"]"
-        print "[",self.secret,"]"
 
     def read_creds(self):
         cfp = ConfigParser.ConfigParser()
-        cfp.read('credentials.props')
+        a = cfp.read(['settings.conf', os.path.expanduser('~/settings.conf')])
         return cfp.get('Credentials', 'key'), cfp.get('Credentials', 'secret')
     
     def dictify(self, i):

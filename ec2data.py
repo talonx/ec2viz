@@ -5,7 +5,7 @@ import sys
 import ConfigParser
 import os
 
-class ec2data:
+class ec2data(object):
 
     def __init__(self):
         self.key, self.secret = self.read_creds()

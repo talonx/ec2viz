@@ -6,6 +6,16 @@
     <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
 <script type="text/javascript">
 
+    function hidecontrols() {
+        $('#chooser').css('display', 'none');
+        $('#loader').css('display', 'block');
+    }
+
+    function showcontrols() {
+        $('#chooser').css('display', 'block');
+        $('#loader').css('display', 'none');
+    }
+
     var ec2data = {};
     $(document).ready(function() {
         $('#chooser_drop').change(function() {
@@ -61,6 +71,7 @@
     }
 
     function graphize() {
+        hidecontrols();
         $.ajax({
             type: 'GET',
             url: '../instancedata',
@@ -95,9 +106,11 @@
 
     	layouter.layout();
 	    renderer.draw();
-
+        showcontrols();
     }
+
     redraw = function(data, sortkey) {
+        hidecontrols();
         var d = sort(data, sortkey);
         $('#canvas').html('');
         drawgraph(d);
@@ -107,7 +120,7 @@
 </head>
 <body onload="graphize();">
 
-<div id='chooser'>
+<div id='chooser' style='display:none;'>
 Group by
 <select id='chooser_drop'>
 <option value="placement">Zone</option>
@@ -118,6 +131,7 @@ Group by
 </div>
 
 <div id='canvas'>
+<div id='loader' class='loader'>Loading...</loader>
 </div>
 
 </body>

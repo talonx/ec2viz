@@ -9,6 +9,7 @@ Dependencies
 
 Python (I use 2.7, might work on older)
 web.py (0.36, same disclaimer)
+Boto (2.6.0, same disclaimer)
 
 Other that this, it uses the [GraphDracula](http://www.graphdracula.net/) library, and jQuery.
 
